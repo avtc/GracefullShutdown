@@ -1,0 +1,15 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp1.1</TargetFramework>
+    <Description>Asp.net core middleware, allows to wait for ongoing requests to finish.</Description>
+    <Authors>Alexander Tarasenkov</Authors>
+    <Company>Alexander Tarasenkov</Company>
+    <GeneratePackageOnBuild>False</GeneratePackageOnBuild>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Hosting.Abstractions" Version="1.1.1" />
+  </ItemGroup>
+
+</Project>
