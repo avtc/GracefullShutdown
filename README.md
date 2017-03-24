@@ -1,4 +1,5 @@
 # GracefullShutdown
+[![Build status](https://ci.appveyor.com/api/projects/status/3jvoe6nfvvmtwpem/branch/master?svg=true)](https://ci.appveyor.com/project/avtc/gracefullshutdown/branch/master) [![NuGet version](https://badge.fury.io/nu/GracefullShutdown.svg)](https://badge.fury.io/nu/GracefullShutdown)
 Asp.net core middleware, allows to wait for ongoing requests to finish.
 
 Sample usage:

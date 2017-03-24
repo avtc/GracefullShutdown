@@ -3,9 +3,14 @@
   <PropertyGroup>
     <TargetFramework>netcoreapp1.1</TargetFramework>
     <Description>Asp.net core middleware, allows to wait for ongoing requests to finish.</Description>
-    <Authors>Alexander Tarasenkov</Authors>
-    <Company>Alexander Tarasenkov</Company>
+    <Authors>avtc</Authors>
+    <Company>avtc</Company>
     <GeneratePackageOnBuild>False</GeneratePackageOnBuild>
+    <PackageLicenseUrl>https://raw.githubusercontent.com/avtc/GracefullShutdown/master/LICENSE</PackageLicenseUrl>
+    <PackageProjectUrl>https://github.com/avtc/GracefullShutdown</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/avtc/GracefullShutdown.git</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>gracefull shutdown kestrel asp net core</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>
