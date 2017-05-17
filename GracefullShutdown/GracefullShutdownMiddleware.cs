@@ -12,21 +12,28 @@ namespace GracefullShutdown
         private readonly RequestDelegate _next;
         private readonly GracefullShutdownOptions _options;
         private readonly ILogger<GracefullShutdownMiddleware> _logger;
-        private static int _requestsInProgress;
-        private static bool _stopRequest = false;
+        private readonly GracefullShutdownState _state;
 
-        public GracefullShutdownMiddleware(RequestDelegate next, GracefullShutdownOptions options, IApplicationLifetime applicationLifetime, ILogger<GracefullShutdownMiddleware> logger)
+        public GracefullShutdownMiddleware(
+            RequestDelegate next, 
+            GracefullShutdownOptions options, 
+            IApplicationLifetime applicationLifetime, 
+            ILogger<GracefullShutdownMiddleware> logger,
+            GracefullShutdownState state
+        )
         {
-            _next = next;
-            _options = options;
-            _logger = logger;
+            if (applicationLifetime == null) throw new ArgumentNullException(nameof(applicationLifetime));
+            _next = next ?? throw new ArgumentNullException(nameof(next));
+            _options = options ?? throw new ArgumentNullException(nameof(options));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _state = state ?? throw new ArgumentNullException(nameof(state));
             applicationLifetime.ApplicationStopping.Register(OnApplicationStopping);
             applicationLifetime.ApplicationStopped.Register(OnApplicationStopped);
         }
 
         public async Task Invoke(HttpContext context)
         {
-            if (_stopRequest)
+            if (_state.StopRequested)
             {
                 var response = context.Response;
                 if (_options.Redirect)
@@ -39,34 +46,35 @@ namespace GracefullShutdown
                 return;
             }
 
-            Interlocked.Increment(ref _requestsInProgress);
+            _state.NotifyRequestStarted();
             try
             {
                 await _next.Invoke(context);
             }
             finally
             {
-                Interlocked.Decrement(ref _requestsInProgress);
+                _state.NotifyRequestFinished();
             }
         }
 
         private void OnApplicationStopping()
         {
-            _logger.LogInformation($"{DateTime.Now.ToString("HH:MM:ss")} Application stopping, requests in progress: {_requestsInProgress}");
-            _stopRequest = true;
+            _logger.LogInformation($"{DateTime.Now.ToString("HH:MM:ss")} Application stopping, requests in progress: {_state.RequestsInProgress}");
+            _state.NotifyStopRequested();
             DateTime shutdownStarted = DateTime.UtcNow;
-            while (_requestsInProgress > 0 && DateTime.UtcNow < shutdownStarted.Add(_options.ShutdownTimeout))
+            while (_state.RequestsInProgress > 0 && DateTime.UtcNow < shutdownStarted.Add(_options.ShutdownTimeout))
             {
                 Thread.Sleep(1000);
-                _logger.LogInformation($"{DateTime.Now.ToString("HH:MM:ss")} Application stopping, requests in progress: {_requestsInProgress}");
+                _logger.LogInformation($"{DateTime.Now.ToString("HH:MM:ss")} Application stopping, requests in progress: {_state.RequestsInProgress}");
             }
         }
 
         private void OnApplicationStopped()
         {
-            if (_requestsInProgress > 0)
-                _logger.LogCritical($"{DateTime.Now.ToString("HH:MM:ss")} Application stopped, requests in progress: {_requestsInProgress}");
+            if (_state.RequestsInProgress > 0)
+                _logger.LogCritical($"{DateTime.Now.ToString("HH:MM:ss")} Application stopped, requests in progress: {_state.RequestsInProgress}");
         }
 
+        
     }
 }

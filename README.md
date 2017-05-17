@@ -7,6 +7,13 @@ Sample usage:
 public class Startup
 {
   //...
+  public IServiceProvider ConfigureServices(IServiceCollection services)
+  {
+     services.AddMvc();
+     services.AddGracefullShutdown();
+  }
+  
+  //...
   public void Configure(IApplicationBuilder app)
   {
     app.UseGracefullShutdown(options => {
@@ -30,3 +37,5 @@ Shutdown can be initiated using:
 - SIGINT or SIGTERM signals for self-hosted Kestrel server in linux / docker
 
 After shutdown is initiated, ongoing requests will be processed until timeout reached, new incoming requests will get 500 or 308 code.
+
+GracefullShutdownOptions and GracefullShutdownState are thread safe and registered as singletons.
