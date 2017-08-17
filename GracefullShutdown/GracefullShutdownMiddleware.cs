@@ -13,6 +13,7 @@ namespace GracefullShutdown
         private readonly GracefullShutdownOptions _options;
         private readonly ILogger<GracefullShutdownMiddleware> _logger;
         private readonly GracefullShutdownState _state;
+        private DateTime _shutdownStarted;
 
         public GracefullShutdownMiddleware(
             RequestDelegate next, 
@@ -59,22 +60,22 @@ namespace GracefullShutdown
 
         private void OnApplicationStopping()
         {
-            _logger.LogInformation($"{DateTime.Now.ToString("HH:MM:ss")} Application stopping, requests in progress: {_state.RequestsInProgress}");
+            _shutdownStarted = DateTime.UtcNow;
             _state.NotifyStopRequested();
-            DateTime shutdownStarted = DateTime.UtcNow;
-            while (_state.RequestsInProgress > 0 && DateTime.UtcNow < shutdownStarted.Add(_options.ShutdownTimeout))
-            {
-                Thread.Sleep(1000);
-                _logger.LogInformation($"{DateTime.Now.ToString("HH:MM:ss")} Application stopping, requests in progress: {_state.RequestsInProgress}");
-            }
         }
 
         private void OnApplicationStopped()
         {
-            if (_state.RequestsInProgress > 0)
-                _logger.LogCritical($"{DateTime.Now.ToString("HH:MM:ss")} Application stopped, requests in progress: {_state.RequestsInProgress}");
-        }
+            while (_state.RequestsInProgress > 0 && DateTime.UtcNow < _shutdownStarted.Add(_options.ShutdownTimeout))
+            {
+                _logger.LogInformation($"{DateTime.Now.ToString("HH:mm:ss")} Application stopping, requests in progress: {_state.RequestsInProgress}");
+                Thread.Sleep(1000);
+            }
 
-        
+            if (_state.RequestsInProgress > 0)
+                _logger.LogCritical($"{DateTime.Now.ToString("HH:mm:ss")} Application stopped, requests in progress: {_state.RequestsInProgress}");
+            else
+                _logger.LogInformation($"{DateTime.Now.ToString("HH:mm:ss")} Application stopped, requests in progress: {_state.RequestsInProgress}");
+        }
     }
 }
