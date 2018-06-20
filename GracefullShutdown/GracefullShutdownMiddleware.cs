@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using System;
@@ -29,7 +29,6 @@ namespace GracefullShutdown
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _state = state ?? throw new ArgumentNullException(nameof(state));
             applicationLifetime.ApplicationStopping.Register(OnApplicationStopping);
-            applicationLifetime.ApplicationStopped.Register(OnApplicationStopped);
         }
 
         public async Task Invoke(HttpContext context)
@@ -62,10 +61,7 @@ namespace GracefullShutdown
         {
             _shutdownStarted = DateTime.UtcNow;
             _state.NotifyStopRequested();
-        }
 
-        private void OnApplicationStopped()
-        {
             while (_state.RequestsInProgress > 0 && DateTime.UtcNow < _shutdownStarted.Add(_options.ShutdownTimeout))
             {
                 _logger.LogInformation($"{DateTime.Now.ToString("HH:mm:ss")} Application stopping, requests in progress: {_state.RequestsInProgress}");
